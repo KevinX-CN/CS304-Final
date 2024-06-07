@@ -122,11 +122,6 @@ while True:
     # 读取摄像头的一帧画面
     frame = camera0.read()
 
-    # 如果正确读取帧，ret为True
-    if not ret:
-        print("无法接收帧，请退出")
-        break
-
     difference = cv2.mean((last_frame - frame) ** 2)[0]
 
     # 评估差异，可以根据需要设定阈值
