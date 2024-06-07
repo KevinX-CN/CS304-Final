@@ -47,11 +47,27 @@ if not cap.isOpened():
     print("无法打开摄像头")
     exit()
 
+start_time = time.time()
+
+scale = 0.00392
+
+classes = None
+
+with open(args.classes, 'r') as f:
+    classes = [line.strip() for line in f.readlines()]
+
+COLORS = np.random.uniform(0, 255, size=(len(classes), 3))
+
+net = cv2.dnn.readNet(args.weights, args.config)
+
+conf_threshold = 0.5
+nms_threshold = 0.4
+
+epchos = 0
+
 while True:
-    # 读取摄像头的一帧画面
     ret, frame = cap.read()
 
-    # 如果正确读取帧，ret为True
     if not ret:
         print("无法接收帧，请退出")
         break
@@ -60,16 +76,6 @@ while True:
 
     Width = image.shape[1]
     Height = image.shape[0]
-    scale = 0.00392
-
-    classes = None
-
-    with open(args.classes, 'r') as f:
-        classes = [line.strip() for line in f.readlines()]
-
-    COLORS = np.random.uniform(0, 255, size=(len(classes), 3))
-
-    net = cv2.dnn.readNet(args.weights, args.config)
 
     blob = cv2.dnn.blobFromImage(image, scale, (416, 416), (0, 0, 0), True, crop=False)
 
@@ -80,8 +86,6 @@ while True:
     class_ids = []
     confidences = []
     boxes = []
-    conf_threshold = 0.5
-    nms_threshold = 0.4
 
     for out in outs:
         for detection in out:
@@ -114,17 +118,15 @@ while True:
         h = box[3]
         draw_prediction(image, class_ids[i], confidences[i], round(x), round(y), round(x + w), round(y + h))
 
-    # 显示帧
+    epchos += 1
     cv2.imshow('obj', image)
+    if epchos % 10 == 0:
+        print(f"FPS:{10 / (time.time() - start_time)}")
+        start_time = time.time()
 
-    # 按 'q' 退出循环
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-    time.sleep(0.3)
-
-# 释放摄像头
 cap.release()
 
-# 关闭所有OpenCV窗口
 cv2.destroyAllWindows()
