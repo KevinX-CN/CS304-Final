@@ -9,6 +9,8 @@ import cv2
 import argparse
 import numpy as np
 
+from jetcam.csi_camera import CSICamera
+
 ap = argparse.ArgumentParser()
 ap.add_argument('-c', '--config', required=False, default="yolov3.cfg",
                 help='path to yolo config file')
@@ -40,12 +42,7 @@ def draw_prediction(img, class_id, confidence, x, y, x_plus_w, y_plus_h):
 
 
 # 初始化摄像头
-cap = cv2.VideoCapture(0)  # 0 通常是默认摄像头的标识
-
-# 检查摄像头是否成功打开
-if not cap.isOpened():
-    print("无法打开摄像头")
-    exit()
+camera0 = CSICamera(capture_device=0, width=224, height=224)  # 0 通常是默认摄像头的标识
 
 start_time = time.time()
 
@@ -60,10 +57,10 @@ COLORS = np.random.uniform(0, 255, size=(len(classes), 3))
 
 net = cv2.dnn.readNet(args.weights, args.config)
 
-ret, last_frame = cap.read()
+last_frame = camera0.read()
 last_box = list()
 
-ret, frame = cap.read()
+frame = camera0.read()
 
 last_difference = cv2.mean((last_frame - frame) ** 2)[0]
 
@@ -123,7 +120,7 @@ epchos = 1
 
 while True:
     # 读取摄像头的一帧画面
-    ret, frame = cap.read()
+    frame = camera0.read()
 
     # 如果正确读取帧，ret为True
     if not ret:
@@ -207,7 +204,7 @@ while True:
     # print(nonzero_count)
 
 # 释放摄像头
-cap.release()
+camera0.release()
 
 # 关闭所有OpenCV窗口
 cv2.destroyAllWindows()
